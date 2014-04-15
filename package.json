@@ -1,5 +1,5 @@
 {
-  "name": "score-bu",
+  "name": "scoring",
   "version": "0.0.1",
   "description": "League scoring widgets aimed at BellinghamUltimate.org",
   "author": "Steve Work <steve@work.renlabs.com>",
@@ -9,7 +9,7 @@
     "gulp-concat": "~2.2.0",
     "gulp-util": "~2.2.14",
     "gulp-gzip": "0.0.6",
-    "gulp-s3": "~0.1.1",
+    "gulp-s3": "https://github.com/swork/gulp-s3/archive/0.1.2.tar.gz",
     "fs.extra": "~1.2.1",
     "yargs": "~1.2.1",
     "uglify-js": "~2.4.13",
