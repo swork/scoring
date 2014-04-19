@@ -1,0 +1,27 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Pool Play</title>
+<script src="pouchdb-2.1.2.js"></script>
+<script src="schedc.js"></script>
+<script src="schedv.js"></script>
+<script src="model.js"></script>
+<script>
+function run() {
+    var localDB="bu2014s2",
+//remoteDB="http://anony:mous@inconvenience.fun.renlabs.com:5984/bu2014s",
+        remoteDB="http://anony:mous@54.188.98.100:5984/bu2014s2",
+        app = new AppController(),
+        model = new LeagueDB(localDB, remoteDB, app),
+        ppView = new PoolPlay(document.getElementById("poolplay"), app);
+    app.addView(ppView);
+    app.begin_here(model);
+};
+</script>
+</head>
+<body onload="run()">
+<p id="online">Offline</p>
+<canvas id="poolplay" name="poolplay" width="400" height="220" style="border:1px solid #000000;">
+<p>Ooo, old Web browsers can't display these scores live.</p>
+</canvas>
+<p id="error_report"></p>
+</body> </html>

@@ -8,13 +8,18 @@ function _LeagueDB_got_db_response(change) {
     var got_new_config = false,
         got_new_score = false;
 
-    if ('error' in change || !('doc' in change) || !change.doc) {
+    if ('rows' in change) {
+        for (var i=0; i<change.rows.length; ++i) {
+            this.got_db_response(change.rows[i]);
+        }
+    } else if ('error' in change || !('doc' in change) || !change.doc) {
         console.log('got_db_response skipping non-document change:', change);
     } else if ('deleted' in change && change.deleted) {
         console.log('skipping deleted document');
     } else if (change.id === "config") {
         this.config = this.controller.boil_config(change.doc);
         got_new_config = true;
+        console.log('got config:', this.config);
     } else if ('score' in change.doc) {
         var s = change.doc.score;  // 2-element array of ints [home/top, away/bot]
         if ( ! ('length' in s) || s.length != 2) {
@@ -22,6 +27,7 @@ function _LeagueDB_got_db_response(change) {
         }
         this.scores[change.id] = change.doc;
         got_new_score = true;
+        console.log('got score:', change.doc);
     } else {
         console.log('got_db_response skipping unexpected change:', change);
     }
@@ -38,24 +44,41 @@ function _LeagueDB_got_db_response(change) {
     }
 }
 
-/**
- * Fetch everything from the local database, and arrange to do so
- * ongoing. Called once when initial replication from remote is done.
- */
-function _LeagueDB_start() {
+function _LeagueDB_manage_changes_feed() {
     var that = this;
     function on_change(change) {
         console.log("db start on_change fired", change);
         that.got_db_response(change);
     }
-    this.pouch.changes({
-        'include_docs': true,
-        'live': true,
-        'onChange': on_change
-    });
+    setTimeout(function() {
+        that.pouch.changes({ 'include_docs': true,
+                             'live': true,
+                             'onChange': on_change })
+            .then(function() { that.manage_changes_feed(); }); }, 2000);
 }
 
-function _LeagueDB_poke_replication() {
+/**
+ * Fetch everything from the local database, and arrange to do so
+ * ongoing. 
+ */
+function _LeagueDB_start() {
+    var that = this;
+    function on_docs(err, change) {
+        console.log("db start on_docs cb err:", err, " docs:", change);
+        if (err) {
+            setTimeout(function(){that.start();}, 2000);
+        } else {
+            that.got_db_response(change);
+        }
+    }
+    this.pouch.allDocs({include_docs:true, conflicts:true}, on_docs)
+        .then(function () {
+            console.log("allDocs done, begin the unending changes feed");
+            that.manage_changes_feed();
+        });
+}
+
+function _LeagueDB_manage_from_replication() {
     var that = this;
     function onChange(err, doc) {
         if (err) {
@@ -67,43 +90,72 @@ function _LeagueDB_poke_replication() {
         }
     }
     function from_complete(err, doc) {
-        console.log("complete callback from db replicate.from, arguments", arguments);
+        console.log("complete callback in db replicate.from, arguments", arguments);
         that.controller.report_online("Offline");
         if (err) {
             that.controller.report_error(err.toString());
         } else {
             that.controller.clear_error();
         }
-        this.from_replication_up = false;
-        // make a button to restart replication?
+        that.from_replication = null;
+
+        setTimeout(function() { that.manage_from_replication(); }, 2000);
     }
-    function to_complete(err, doc) {
-        console.log("complete callback from db replicate.to, arguments", arguments);
-        if (err) {
-            that.controller.report_error(err.toString());
-        } else {
-            that.controller.clear_error();
-        }
-        this.to_replication_up = false;
-        // make a button to restart replication?
-    }
-    this.controller.report_online("Online");
-    var r;
-    if (this.replicate_bidi && ! this.to_replication_up) {
-        r = this.pouch.replicate.to(this.remoteDB, { 'complete': to_complete,
-                                                     'live': true });
-        console.log("replicate.to started:", r);
-        this.to_replication_up = true;
-    }
-    if ( ! this.from_replication_up) {
-        r = this.pouch.replicate.from(this.remoteDB, { 'onChange': onChange,
-                                                       'complete': from_complete,
-                                                       'live': true });
-        console.log("replicate.from started:", r);
-        this.from_replication_up = true;
+    if ( ! this.from_replication) {
+        r = PouchDB.replicate(this.remoteDB, this.localDB,
+                              { 'onChange': onChange,
+                                'complete': from_complete,
+                                'live': true });
+        console.log("replicate-from started:", r);
+        this.from_replication = r;
     }
 }
 
+function _LeagueDB_manage_to_replication() {
+    var that = this;
+    function onChange(err, doc) {
+        if (err) {
+            that.controller.report_online("Errors");
+            that.controller.report_error(err.toString());
+        } else {
+            that.controller.report_online("Online");
+            that.controller.clear_error();
+        }
+    }
+    function to_complete(err, doc) {
+        console.log("complete in db replicate.to, arguments", arguments);
+        that.controller.report_online("Offline");
+        if (err) {
+            console.log("to_complete err:", err);
+            that.controller.report_error(err.toString());
+
+            /* On particular known errors just give up - don't auto-restart. */
+            if (err.status === 500 && err.error === 'Replication aborted' && err.reason === 'target.revsDiff completed with error') {
+                console.log("##### FATAL ERROR in to-replication, known, not auto-restarting.");
+                return;
+            }
+        } else {
+            that.controller.clear_error();
+        }
+        that.to_replication = null;
+
+        setTimeout(function() { that.manage_to_replication(); }, 2000);
+    }
+    if ( ! this.to_replication) {
+        r = PouchDB.replicate(this.localDB, this.remoteDB,
+                              { 'onChange': onChange,
+                                'complete': to_complete,
+                                'live': true });
+        console.log("replicate-to started:", r);
+        this.to_replication = r;
+    }
+}
+
+/**
+ * This shouldn't be called if multiple writers are in play: a slow
+ * sync could convince one writer to create a doc that already exists
+ * elsewhere, and resolving that conflict is hairy.
+ */
 function _LeagueDB_new_game_doc(key) {
     var round, team0, team1;
     var parts = key.split("_");
@@ -119,30 +171,29 @@ function _LeagueDB_update_score(gamedoc) {
     } else {
         console.log("ERROR Invalid game doc, no update done.");
     }
-
-    if ( ! this.to_replication_up) {
-        this.poke_replication();
-    }
 }
 
-function LeagueDB(pouch, remoteDB, controller, replicate_bidi) {
-    this.pouch = pouch;
+function LeagueDB(localDB, remoteDB, controller, replicate_bidi) {
+    this.localDB = localDB;
     this.remoteDB = remoteDB;
     this.controller = controller || new LeagueDBNullController();
     this.replicate_bidi = replicate_bidi;
     this.config = null;
     this.scores = {};
-    this.from_replication_up = false;
-    this.to_replication_up = false;
 
     // methods
     this.start = _LeagueDB_start;
     this.got_db_response = _LeagueDB_got_db_response;
     this.new_game_doc = _LeagueDB_new_game_doc;
     this.update_score = _LeagueDB_update_score;
-    this.poke_replication = _LeagueDB_poke_replication;
+    this.manage_from_replication = _LeagueDB_manage_from_replication;
+    this.manage_to_replication = _LeagueDB_manage_to_replication;
+    this.manage_changes_feed = _LeagueDB_manage_changes_feed;
 
-    this.poke_replication();
+    console.log(this.localDB);
+    this.pouch = new PouchDB(this.localDB);
+    this.manage_from_replication();
+    this.manage_to_replication();
 }
 
 /**

@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>scoring</title>
+<script src="pouchdb-2.1.2.js"></script>
+<script src="model.js"></script>
+<script src="poolplay.js"></script>
+<script src="scoring.js"></script>
+<script src="app-scoring.js"></script>
+<script>
+function run() {
+    var localDB="bu2014s2",
+        remoteDB="http://anony:mous@fun.renlabs.com:5984/bu2014s2",
+        app = new AppController(),
+        model = new LeagueDB(localDB, remoteDB, app, true),
+        ppView = new PoolPlay(document.getElementById("poolplay"), app),
+        scoringView = new ScoringView(document.getElementById("scoring"), app);
+    app.addView(ppView);
+    app.addView(scoringView);
+    app.begin_here(model);
+};
+</script>
+</head>
+<body onload="run()">
+<p id="online">Offline</p>
+<canvas id="poolplay" name="poolplay" width="400" height="220"
+ style="border:1px solid #000000; border-radius:5px">
+<p>Ooo, old Web browsers can't display these scores.</p>
+</canvas>
+<p id="error_report"></p>
+
+<canvas id="scoring" name="scoring" width="300" height="150" style="border:1px solid #000000; border-radius:5px">
+<p>Ooo, here neither.</p>
+</canvas>
+
+<!--
+<div>
+  <table border="0" style="border-radius:5px; border:2px solid #000000;">
+    <tr id="sctop">
+      <td>
+        <button id="top_down" height="500" width="50" type="button">-</button>
+      </td>
+      <td>
+        <button id="top_up" height="50" width="50" type="button">+</button>
+      </td>
+    </tr>
+    <tr id="scbottom">
+      <td>
+        <button id="bottom_down" height="50" width="50" type="button">-</button>
+      </td>
+      <td>
+        <button id="bottom_up" height="50" width="50" type="button">+</button>
+      </td>
+    </tr>
+  </table>
+</div>
+-->
+        
+</body>
+</html>

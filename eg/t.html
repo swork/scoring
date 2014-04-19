@@ -1,0 +1,23 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Test Scoring Data Model</title>
+<script src="pouchdb-2.1.2.js"></script>
+<script src="model.js"></script>
+<script src="testvc.js"></script>
+<script>
+function run() {
+//remoteDB="http://anony:mous@inconvenience.fun.renlabs.com:5984/bu2014s",
+    var localDB="bu2014s",
+        remoteDB="http://anony:mous@54.188.98.100:5984/bellulti2014s",
+        app = new TestVC(),
+        model = new LeagueDB(localDB, remoteDB, app);
+    app.begin_here(model);
+};
+</script>
+</head>
+<body onload="run()">
+<p "background-color: green" id="online">Offline</p>
+<div style="text-color:red; background-color: lightgrey" id="error_report"></div>
+<div id="log">
+</div>
+</body> </html>

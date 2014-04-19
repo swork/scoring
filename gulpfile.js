@@ -8,68 +8,87 @@ var gzip = require('gulp-gzip');
 var uglify = require('gulp-uglify');
 var fs = require('fs.extra');
 
-var filesets = {
-    schedule_js: [
-        './src/poolplay.js',
-        './src/model.js',
-        './src/app.js',
-        './pkg/*.js'
-    ],
-    scorekeep_js: [
-        './src/poolplay.js',  // eventually goes away - scoring is standalone, start via email link
-        './src/scoring.js',
-        './src/model.js',
-        './src/app-scoring.js',
-        './pkg/*.js'
-    ],
-};
+function flattenArray(a, r) {
+    if (!r) { r = []; }
+    for (var i=0; i<a.length; i++) {
+        if (a[i].constructor == Array) {
+            flattenArray(a[i], r);
+        } else {
+            r.push(a[i]);
+        }
+    }
+    return r;
+}
 
 gulp.task('check', function() {
-    gulp.src(filesets.scorekeep_js) // better filesets needed, schedule_js
+    gulp.src('./src/*.js')
         .pipe(jshint())
         .pipe(jshint.reporter());
 });
 
-gulp.task('build-staging', function() {
-    gulp.src(filesets.scorekeep_js)
-        .pipe(concat('scorekeep.js'))
-        .pipe(uglify({outSourceMap: true}))
-        .pipe(gzip({ append: false }))
-        .pipe(gulp.dest('./staging/'));
-    gulp.src(filesets.schedule_js)
-        .pipe(concat('schedule.js'))
-        .pipe(uglify({outSourceMap: true}))
-        .pipe(gzip({ append: false }))
-        .pipe(gulp.dest('./staging/'));
+gulp.task('build-sched', function() {
+    var js = ['./src/schedv.js',
+              './src/model.js',
+              './src/schedc.js',
+             ];
+    var html = ['./eg/schedd.html'];
+    var lib = './lib/pouchdb-2.1.2.js';
+    var target = './dist/sched';
+
+    gulp.src(flattenArray([js, lib]))
+        .pipe(gulp.dest(target));
+    gulp.src(html)
+        .pipe(gulp.dest(target + '/dev.html'));
 });
 
-gulp.task('build', function() {
-    gulp.src(filesets.scorekeep_js)
-        .pipe(gulp.dest('./dist/'));
-    gulp.src(filesets.schedule_js)
-        .pipe(gulp.dest('./dist/'));
+gulp.task('build-score', function() {
+    var js = ['./src/scorev.js',
+              './src/schedv.js',
+              './src/model.js',
+              './src/scorec.js',
+             ];
+    var html = ['./eg/scored.html'];
+    var lib = ['./lib/pouchdb-2.1.2.js'];
+    var target = './dist/score';
+    gulp.src(flattenArray([js, lib]))
+        .pipe(gulp.dest(target));
+    gulp.src(html)
+        .pipe(gulp.dest(target + '/dev.html'));
 });
 
-gulp.task('publish', ['build-staging',], function() {
+gulp.task('build-tester', function() {
+    var js = [
+              './src/model.js',
+              './src/tc.js',
+             ];
+    var html = ['./eg/t.html'];
+    var lib = ['./lib/pouchdb-2.1.2.js'];
+    var target = './dist/t';
+    gulp.src(flattenArray([js, lib]))
+        .pipe(gulp.dest(target));
+    gulp.src(html)
+        .pipe(gulp.dest(target + '/index.html'));
+});
+
+gulp.task('build', [
+    'build-sched',
+    'build-score',
+    'build-tester']);
+
+gulp.task('publish', ['build',], function() {
     var knox_options = JSON.parse(fs.readFileSync('aws-credentials.json'));
     knox_options.bucket = 'bellinghamultimatescoring-staging';
     knox_options.endpoint = 's3-us-west-2.amazonaws.com';
-
-    var params = {
-        headers: { "Content-Encoding": "gzip",
-                   "Content-Type": "application/javascript",
-                   "X-Steve-Was-Here": "yup" }
-    };
-
-    gulp.src('./staging/*.js')
-        .pipe(s3(knox_options, params));
-    gulp.src('./staging/*.map')
-        .pipe(s3(knox_options, params));
+    gulp.src('./dist/*')
+        .pipe(s3(knox_options, {}));
 });
 
 gulp.task('clean', function() {
     fs.rmrf('dist', function () {});
-    fs.rmrf('staging', function () {});
 });
 
 gulp.task('default', ['check', 'build']);
+
+gulp.task('watch', ['default'], function() {
+    gulp.watch(['./dist/*'], ['default']);
+});
