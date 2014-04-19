@@ -31,7 +31,7 @@ gulp.task('build-sched', function() {
               './src/model.js',
               './src/schedc.js',
              ];
-    var html = ['./eg/schedd.html'];
+    var html = ['./src/schedd.html'];
     var lib = './lib/pouchdb-2.1.2.js';
     var target = './dist/sched';
 
@@ -47,7 +47,7 @@ gulp.task('build-score', function() {
               './src/model.js',
               './src/scorec.js',
              ];
-    var html = ['./eg/scored.html'];
+    var html = ['./src/scored.html'];
     var lib = ['./lib/pouchdb-2.1.2.js'];
     var target = './dist/score';
     gulp.src(flattenArray([js, lib]))
@@ -61,7 +61,7 @@ gulp.task('build-tester', function() {
               './src/model.js',
               './src/tc.js',
              ];
-    var html = ['./eg/t.html'];
+    var html = ['./src/t.html'];
     var lib = ['./lib/pouchdb-2.1.2.js'];
     var target = './dist/t';
     gulp.src(flattenArray([js, lib]))
