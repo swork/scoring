@@ -1,10 +1,13 @@
-app_trace = function () { console.log.apply(console, arguments); };
-
-function _SchedController_report_online(msg) {
-    var e = document.getElementById("online");
+function _SchedController_report_online(msg, up) {
+    var n = "online_down";
+    var e;
+    if (up) {
+        n = "online_up";
+    }
+    e = document.getElementById(n);
     if (e) {
         e.class = msg;
-        e.innerHTML = msg;
+        e.innerText = msg;
     }
 }
 
@@ -24,27 +27,6 @@ function _SchedController_clear_error() {
         e.innerHTML = '';
     }
 }
-
-/*
-function redraw_everything() {
-    clear_error();
-    console.log("redraw for initial sync, _pool_canvas_handler:", _pool_canvas_handler);
-    _pool_canvas_handler.start();
-};
-
-function go_live() {
-    console.log("go_live");
-    var e = document.getElementById("online");
-    if (e) {
-        e.innerHTML="Replication finished.";
-    }
-    redraw_everything();
-}
-
-function pp_clicked(e) {
-    _pool_canvas_handler.handle_click(e);
-}
-*/
 
 function _SchedController_begin_here(model) {
     this.model = model;

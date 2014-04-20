@@ -243,7 +243,7 @@ function _ScheduleView_redraw() {
 
     emWidth = this.canvas.width / (7.0 * this.config.Dates.length);
     lineHeight = emWidth * 2;
-    // console.log("em width:", emWidth, " line height:", lineHeight);
+    console.log("redraw. em width:", emWidth, " line height:", lineHeight);
 
     var mbw = (emWidth * 7) * 0.80;
     var mbh = mbw * 0.9;

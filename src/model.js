@@ -51,10 +51,12 @@ function _LeagueDB_manage_changes_feed() {
         that.got_db_response(change);
     }
     setTimeout(function() {
+        console.log("changes-feed started");
         that.pouch.changes({ 'include_docs': true,
                              'live': true,
                              'onChange': on_change })
             .then(function() { that.manage_changes_feed(); }); }, 2000);
+    console.log("changes-feed armed");
 }
 
 /**
@@ -80,6 +82,7 @@ function _LeagueDB_start() {
 
 function _LeagueDB_manage_from_replication() {
     var that = this;
+    this.controller.report_online("Starting");
     function onChange(err, doc) {
         if (err) {
             that.controller.report_online("Errors");
@@ -106,25 +109,27 @@ function _LeagueDB_manage_from_replication() {
                               { 'onChange': onChange,
                                 'complete': from_complete,
                                 'live': true });
-        console.log("replicate-from started:", r);
+        this.controller.report_online("Online");
+        console.log("replicate-from started, ", this.remoteDB, " to ", this.localDB, " r:", r);
         this.from_replication = r;
     }
 }
 
 function _LeagueDB_manage_to_replication() {
     var that = this;
+    this.controller.report_online("Starting", true /*up*/);
     function onChange(err, doc) {
         if (err) {
-            that.controller.report_online("Errors");
+            that.controller.report_online("Errors", true /*up*/);
             that.controller.report_error(err.toString());
         } else {
-            that.controller.report_online("Online");
+            that.controller.report_online("Online", true /*up*/);
             that.controller.clear_error();
         }
     }
     function to_complete(err, doc) {
         console.log("complete in db replicate.to, arguments", arguments);
-        that.controller.report_online("Offline");
+        that.controller.report_online("Offline", true /*up*/);
         if (err) {
             console.log("to_complete err:", err);
             that.controller.report_error(err.toString());
@@ -146,6 +151,8 @@ function _LeagueDB_manage_to_replication() {
                               { 'onChange': onChange,
                                 'complete': to_complete,
                                 'live': true });
+        this.controller.report_online("Online", true /*up*/);
+        console.log("replicate-to started, ", this.localDB, " to ", this.remoteDB, " r:", r);
         console.log("replicate-to started:", r);
         this.to_replication = r;
     }
@@ -204,7 +211,7 @@ function LeagueDBNullController() {
         console.log("NullController installed - notification, umm, noted.");
     };
     report_online = function(errstr) {
-        console.log("NullController installed - error report, umm, noted. (", errstr, ")");
+        console.log("NullController installed - online report, umm, noted. (", errstr, ")");
     };
     report_error = function(errstr) {
         console.log("NullController installed - error report, umm, noted. (", errstr, ")");

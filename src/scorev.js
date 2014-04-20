@@ -14,8 +14,7 @@ function _ScoringView_redraw() {
     }
 
     if (!this.game_key) {
-        ctx.fillText("Pick your game.", w/2, h/2-20);
-        ctx.fillText("(To score it.)", w/2, h/2+20);
+        ctx.fillText("key?", w/2, h/2-20);
         ctx = this.CBC = null;
         return;
     }
@@ -26,14 +25,13 @@ function _ScoringView_redraw() {
         gamedoc = this.scores[this.game_key];
         console.log("got gamedoc", gamedoc);
     } else {
-        console.log("gamedoc is not in this.scores, making a new one. BE SURE REPLICATION IS COMPLETE AND SCORES LOADED BEFORE ALLOWING SCORING GAME SELECTION! Else this .new_game_doc call will generate a conflict.");
-        // fake a 0,0 doc.
-        this.scores[this.game_key] = gamedoc = this.controller.model.new_game_doc(this.game_key);
-        console.log("redraw faked a new gamedoc", gamedoc);
+        console.log("Game '" + this.game_key + "' not ready.");
+        ctx.fillText(this.game_key + "?", w/2, h/2+20);
+        return;
     }
     var team0 = gamedoc.team[0].color,
         team1 = gamedoc.team[1].color;
-        
+
     ctx.fillStyle = team0;
     ctx.fillRect(0, 0, wl, h/2);
     ctx.fillStyle = team1;

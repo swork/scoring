@@ -7,30 +7,47 @@
 <script src="scorev.js"></script>
 <script src="scorec.js"></script>
 <script>
+function queryObj() {
+    var result = {}, queryString = location.search.slice(1),
+        re = /([^&=]+)=([^&]*)/g, m;
+    while (m = re.exec(queryString)) {
+        result[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+    }
+    return result;
+}
+
 function run() {
     var localDB="bu2014s2",
         remoteDB="http://anony:mous@fun.renlabs.com:5984/bu2014s2",
-        app = new AppController(),
+        pathname = window.location.pathname;
+    if (pathname.substring(1, 1+4) == "dev_") {
+        localDB += "_dev";
+        remoteDB += "_dev";
+        console.log("dbs to _dev", localDB, remoteDB);
+    }
+
+    var app = new ScoreController(),
         model = new LeagueDB(localDB, remoteDB, app, true),
-        scheduleView = new ScheduleView(document.getElementById("schedule"), app),
         scoringView = new ScoringView(document.getElementById("scoring"), app);
-    app.addView(scheduleView);
+
     app.addView(scoringView);
     app.begin_here(model);
+
+    var q = queryObj();
+    app.notify_game(q['key']);
+    app.notify_user(q['user']);
 };
 </script>
+<meta name="viewport" content="width=device-width"></meta>
 </head>
 <body onload="run()">
-<p id="online">Offline</p>
-<canvas id="schedule" name="schedule" width="400" height="220"
- style="border:1px solid #000000; border-radius:5px">
-<p>Ooo, old Web browsers can't display these scores.</p>
+<canvas id="scoring" name="scoring" width="300" height="150" style="border:1px solid #000000; border-radius:5px">
+<p>Ooo, old web browser isn't useful here, sorry.</p>
 </canvas>
+<p>&#x261d; <span id="online_up">Uninitialized</span>
+ - <span id="online_down">Uninitialized</span> &#x261f;</p>
 <p id="error_report"></p>
 
-<canvas id="scoring" name="scoring" width="300" height="150" style="border:1px solid #000000; border-radius:5px">
-<p>Ooo, here neither.</p>
-</canvas>
 
 <!--
 <div>

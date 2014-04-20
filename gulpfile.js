@@ -10,7 +10,7 @@ var rename = require('gulp-rename');
 var request = require('request');
 var fs = require('fs.extra');
 
-var couch_db = 'http://fun.renlabs.com:5984/bu';
+var couch_db = 'http://fun.renlabs.com:5984/dev_bu';
 
 function flattenArray(a, r) {
     if (!r) { r = []; }

@@ -1,14 +1,17 @@
-app_trace = function () { console.log.apply(console, arguments); };
-
-function _AppController_report_online(msg) {
-    var e = document.getElementById("online");
+function _ScoreController_report_online(msg, up) {
+    var n = "online_down";
+    var e;
+    if (up) {
+        n = "online_up";
+    }
+    e = document.getElementById(n);
     if (e) {
         e.class = msg;
-        e.innerHTML = msg;
+        e.innerText = msg;
     }
 }
 
-function _AppController_report_error(msg) {
+function _ScoreController_report_error(msg) {
     var e = document.getElementById("error_report");
     if (e) {
         e.class = "error";
@@ -16,28 +19,27 @@ function _AppController_report_error(msg) {
     }
 }
 
-function _AppController_clear_error() {
+function _ScoreController_clear_error() {
     var e = document.getElementById("error_report");
-    console.log("clear_error, e:", e);
     if (e) {
         e.class = "clear";
         e.innerHTML = '';
     }
 }
 
-function _AppController_begin_here(model) {
+function _ScoreController_begin_here(model) {
     this.model = model;
     this.model.start();         // local change feed listener drives all else
 }
 
-function AppController() {
+function ScoreController() {
     this.views = [ new NullView(), ];
 
     // methods
-    this.begin_here = _AppController_begin_here;
-    this.report_online = _AppController_report_online;
-    this.report_error = _AppController_report_error;
-    this.clear_error = _AppController_clear_error;
+    this.begin_here = _ScoreController_begin_here;
+    this.report_online = _ScoreController_report_online;
+    this.report_error = _ScoreController_report_error;
+    this.clear_error = _ScoreController_clear_error;
     this.addView = function(view) {
         if (this.views.length === 1 && this.views[0].isNullView) {
             this.views = [ view ];
@@ -81,10 +83,13 @@ function AppController() {
             }
         }
     };
+    this.notify_user = function(user) {
+        this.user = user;
+    };
 }
 
 /**
- * Document AppController's expectations regarding views.
+ * Document ScoreController's expectations regarding views.
  */
 function NullView() {
     this.isNullView = true;

@@ -8,9 +8,15 @@
 <script>
 function run() {
     var localDB="bu2014s2",
-//remoteDB="http://anony:mous@inconvenience.fun.renlabs.com:5984/bu2014s",
-        remoteDB="http://anony:mous@54.188.98.100:5984/bu2014s2",
-        controller = new SchedController(),
+        remoteDB="http://anony:mous@fun.renlabs.com:5984/bu2014s2",
+        pathname = window.location.pathname;
+    if (pathname.substring(1, 1+4) == "dev_") {
+        localDB += "_dev";
+        remoteDB += "_dev";
+        console.log("dbs to _dev", localDB, remoteDB);
+    }
+
+    var controller = new SchedController(),
         model = new LeagueDB(localDB, remoteDB, controller),
         scheduleView = new ScheduleView(document.getElementById("schedule"), controller);
     controller.addView(scheduleView);
@@ -19,7 +25,8 @@ function run() {
 </script>
 </head>
 <body onload="run()">
-<p id="online">Offline</p>
+<p>&#x261d; <span id="online_up">Uninitialized</span>
+ - <span id="online_down">Uninitialized</span> &#x261f;</p>
 <canvas id="schedule" name="schedule" width="400" height="220" style="border:1px solid #000000;">
 <p>Ooo, old Web browsers can't display these scores live.</p>
 </canvas>
