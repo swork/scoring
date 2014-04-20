@@ -86,6 +86,14 @@ function ScoreController() {
     this.notify_user = function(user) {
         this.user = user;
     };
+    this.log = function(msg) {
+        for (var i=0; i<this.views.length; ++i) {
+            var v = this.views[i];
+            if ('notifyee_log' in v) {
+                v.notifyee_log(msg);
+            }
+        }
+    }
 }
 
 /**

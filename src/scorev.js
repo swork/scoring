@@ -80,6 +80,14 @@ function _ScoringView_notifyee_scores(scores) {
     this.redraw();
 }
 
+function _ScoringView_notifyee_log(msg) {
+    console.log("notifyee_log", msg);
+    var e = document.getElementById("log");
+    if (e) {
+        e.innerHtml = "<p>msg</p>" + e.innerHtml;
+    }
+}
+
 /**
  * arg is round_team0_team1 DB id for a game, or null to reset.
  */
@@ -164,6 +172,7 @@ function ScoringView(canvas, controller) {
     this.notifyee_config = _ScoringView_notifyee_config;
     this.notifyee_scores = _ScoringView_notifyee_scores;
     this.notifyee_game = _ScoringView_notifyee_game;
+    this.notifyee_log = _ScoringView_notifyee_log;
 
     var that = this;
     function onclick(e) {
