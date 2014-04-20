@@ -94,10 +94,8 @@ gulp.task('watch', ['default'], function() {
 function couch_attach_doc(url, distdir, rev, doclist) {
     var docfile = doclist.pop();
     var attachment_url = url + '/' + docfile + "?rev=" + rev;
-    console.log(docfile, "to", attachment_url, "left:", doclist);
     fs.createReadStream(distdir + '/' + docfile)
         .pipe(request.put(attachment_url, function(e, r, b) {
-            console.log("info: e:", e, "r.s:", r.statusCode, "b:", b);
             if (!e && r.statusCode == 201) {
                 if (doclist.length > 0) {
                     var rev = JSON.parse(b).rev;
@@ -116,16 +114,15 @@ function couch_attach_docs(appname, doclist) {
     request.head(url, function (err, resp, body) {
         if (!err && resp.statusCode == 404) {
             fs.createReadStream(srcdoc)
-                .pipe(request.put(url), function(e, r, b) {
-                    if (!e && r.statusCode == 201) {
+                .pipe(request.put(url, function(e, r, b) {
+                    if (!e && (r.statusCode == 201 || r.statusCode == 200)) {
                         couch_attach_docs(appname, doclist);
                     } else {
                         console.log("Trouble creating ", srcdoc, e, r.statusCode, b);
                     }
-                });
+                }));
         } else if (!err && resp.statusCode == 200) {
             var rev = JSON.parse(resp.headers.etag);  /* lose "" */
-            console.log("rev:", rev);
             couch_attach_doc(url, distdir, rev, doclist);
         } else {
             console.log('code:', resp && resp.statusCode, 'err:', err, ' url:', url);
@@ -134,5 +131,8 @@ function couch_attach_docs(appname, doclist) {
 }
 
 gulp.task('publish', ['build',], function() {
+    request.head(couch_db, function (e, r, b) { if (!e && r.statusCode == 404) { console.log("Create database "+couch_db+" first.");}});
     couch_attach_docs('score', ['dev.html','model.js','pouchdb-2.1.2.js','schedv.js','scorec.js','scorev.js']);
+    couch_attach_docs('sched', ['dev.html','model.js','pouchdb-2.1.2.js','schedv.js','schedc.js']);
+    couch_attach_docs('t', ['index.html','model.js','pouchdb-2.1.2.js','tc.js']);
 });

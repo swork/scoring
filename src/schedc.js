@@ -1,6 +1,6 @@
 app_trace = function () { console.log.apply(console, arguments); };
 
-function _AppController_report_online(msg) {
+function _SchedController_report_online(msg) {
     var e = document.getElementById("online");
     if (e) {
         e.class = msg;
@@ -8,7 +8,7 @@ function _AppController_report_online(msg) {
     }
 }
 
-function _AppController_report_error(msg) {
+function _SchedController_report_error(msg) {
     var e = document.getElementById("error_report");
     if (e) {
         e.class = "error";
@@ -16,7 +16,7 @@ function _AppController_report_error(msg) {
     }
 }
 
-function _AppController_clear_error() {
+function _SchedController_clear_error() {
     var e = document.getElementById("error_report");
     console.log("clear_error, e:", e);
     if (e) {
@@ -46,19 +46,19 @@ function pp_clicked(e) {
 }
 */
 
-function _AppController_begin_here(model) {
+function _SchedController_begin_here(model) {
     this.model = model;
     this.model.start();
 }
 
-function AppController() {
+function SchedController() {
     this.views = [ new NullView(), ];
 
     // methods
-    this.begin_here = _AppController_begin_here;
-    this.report_online = _AppController_report_online;
-    this.report_error = _AppController_report_error;
-    this.clear_error = _AppController_clear_error;
+    this.begin_here = _SchedController_begin_here;
+    this.report_online = _SchedController_report_online;
+    this.report_error = _SchedController_report_error;
+    this.clear_error = _SchedController_clear_error;
     this.addView = function(view) {
         if (this.views.length === 1 && this.views[0].isNullView) {
             this.views = [ view ];
@@ -88,7 +88,7 @@ function AppController() {
 }
 
 /**
- * Document AppController's expectations regarding views.
+ * Document SchedController's expectations regarding views.
  */
 function NullView() {
     this.isNullView = true;

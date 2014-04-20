@@ -58,7 +58,7 @@ function trace_half_box(ctx, x, y, w, h, m) {
 
 /////////////////////////////////
 
-function _PoolPlay_create_matchup_box(cx, cy, w, h, dateString, matchupIdx) {
+function _ScheduleView_create_matchup_box(cx, cy, w, h, dateString, matchupIdx) {
     var ctx = this.CBC;
     var TOP = 0;
     var BOTTOM = 1;
@@ -149,7 +149,7 @@ function _PoolPlay_create_matchup_box(cx, cy, w, h, dateString, matchupIdx) {
     }
 }
 
-function _PoolPlay_create_column_header(dateString, columnCenter) {
+function _ScheduleView_create_column_header(dateString, columnCenter) {
     var display_date = reformatDate(dateString);
     this.CBC.save();
     this.CBC.shadowBlur = 1;
@@ -174,7 +174,7 @@ function _PoolPlay_create_column_header(dateString, columnCenter) {
     this.CBC.restore();
 }
 
-function _PoolPlay_create_column_content(dateString, columnCenter) {
+function _ScheduleView_create_column_content(dateString, columnCenter) {
     this.create_column_header(dateString, columnCenter);
 
     var n_matches = this.config.PoolMatches[dateString].length;
@@ -187,7 +187,7 @@ function _PoolPlay_create_column_content(dateString, columnCenter) {
     }
 }
 
-function _PoolPlay_draw_columns() {
+function _ScheduleView_draw_columns() {
     var column_width = this.canvas.width / this.config.Dates.length;
     var date_objs_sorted = this.config.Dates;
 
@@ -198,7 +198,7 @@ function _PoolPlay_draw_columns() {
     }
 }
 
-function _PoolPlay_draw_date_line(today) {
+function _ScheduleView_draw_date_line(today) {
     var column_width = this.canvas.width / this.config.Dates.length;
     // dotted vertical line between played and not-yet, plus gray to R
     // of line
@@ -230,7 +230,7 @@ function _PoolPlay_draw_date_line(today) {
     }
 }
 
-function _PoolPlay_redraw() {
+function _ScheduleView_redraw() {
     var emWidth;
     var lineHeight;
     var d;
@@ -289,18 +289,18 @@ function _PoolPlay_redraw() {
     this.CBC = null;
 }
 
-function _PoolPlay_notifyee_config(cfg) {
+function _ScheduleView_notifyee_config(cfg) {
     console.log("PP notifyee cfg:", cfg);
     this.config = cfg;
     this.redraw(); 
 }
 
-function _PoolPlay_notifyee_scores(scores) {
+function _ScheduleView_notifyee_scores(scores) {
     this.scores = scores;
     this.redraw();
 }
 
-function _PoolPlay_boil_config(cfg) {
+function _ScheduleView_boil_config(cfg) {
     var m = cfg.PoolMatches;
     var datestrings = Object.keys(m);
     cfg.Dates = datestrings.map(function(s) {
@@ -319,7 +319,7 @@ function _PoolPlay_boil_config(cfg) {
     return cfg;
 }
 
-function _PoolPlay_handle_click(e) {
+function _ScheduleView_handle_click(e) {
     e = e || window.event;
     e.preventDefault = true;
     var target = e.target || e.srcElement;
@@ -345,23 +345,23 @@ function _PoolPlay_handle_click(e) {
     }
 }
 
-function PoolPlay(canvas, controller) {
+function ScheduleView(canvas, controller) {
     this.canvas = canvas;
-    this.controller = controller || new PoolPlayNullController();
+    this.controller = controller || new ScheduleViewNullController();
     this.layout = null;  // instantiated when config is known
     this.scores = null;
 
     // methods
-    this.boil_config = _PoolPlay_boil_config;
-    this.redraw = _PoolPlay_redraw;
-    this.draw_columns = _PoolPlay_draw_columns;
-    this.create_column_content = _PoolPlay_create_column_content;
-    this.create_column_header = _PoolPlay_create_column_header;
-    this.create_matchup_box = _PoolPlay_create_matchup_box;
-    this.draw_date_line = _PoolPlay_draw_date_line;
-    this.handle_click = _PoolPlay_handle_click;
-    this.notifyee_config = _PoolPlay_notifyee_config;
-    this.notifyee_scores = _PoolPlay_notifyee_scores;
+    this.boil_config = _ScheduleView_boil_config;
+    this.redraw = _ScheduleView_redraw;
+    this.draw_columns = _ScheduleView_draw_columns;
+    this.create_column_content = _ScheduleView_create_column_content;
+    this.create_column_header = _ScheduleView_create_column_header;
+    this.create_matchup_box = _ScheduleView_create_matchup_box;
+    this.draw_date_line = _ScheduleView_draw_date_line;
+    this.handle_click = _ScheduleView_handle_click;
+    this.notifyee_config = _ScheduleView_notifyee_config;
+    this.notifyee_scores = _ScheduleView_notifyee_scores;
 
     var that = this;
     function onclick(e) {
@@ -373,7 +373,7 @@ function PoolPlay(canvas, controller) {
 /**
  * Besides a fallback, this documents what this module expects of the controller. Pretty simple.
  */
-function PoolPlayNullController() {
+function ScheduleViewNullController() {
     function report_error(errstr) {
         console.log("NullController installed - error report, umm, noted. (", errstr, ")");
     }

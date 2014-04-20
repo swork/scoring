@@ -12,9 +12,9 @@ function run() {
         remoteDB="http://anony:mous@fun.renlabs.com:5984/bu2014s2",
         app = new AppController(),
         model = new LeagueDB(localDB, remoteDB, app, true),
-        ppView = new PoolPlay(document.getElementById("poolplay"), app),
+        scheduleView = new ScheduleView(document.getElementById("schedule"), app),
         scoringView = new ScoringView(document.getElementById("scoring"), app);
-    app.addView(ppView);
+    app.addView(scheduleView);
     app.addView(scoringView);
     app.begin_here(model);
 };
@@ -22,7 +22,7 @@ function run() {
 </head>
 <body onload="run()">
 <p id="online">Offline</p>
-<canvas id="poolplay" name="poolplay" width="400" height="220"
+<canvas id="schedule" name="schedule" width="400" height="220"
  style="border:1px solid #000000; border-radius:5px">
 <p>Ooo, old Web browsers can't display these scores.</p>
 </canvas>

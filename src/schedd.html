@@ -10,17 +10,17 @@ function run() {
     var localDB="bu2014s2",
 //remoteDB="http://anony:mous@inconvenience.fun.renlabs.com:5984/bu2014s",
         remoteDB="http://anony:mous@54.188.98.100:5984/bu2014s2",
-        app = new AppController(),
-        model = new LeagueDB(localDB, remoteDB, app),
-        ppView = new PoolPlay(document.getElementById("poolplay"), app);
-    app.addView(ppView);
-    app.begin_here(model);
+        controller = new SchedController(),
+        model = new LeagueDB(localDB, remoteDB, controller),
+        scheduleView = new ScheduleView(document.getElementById("schedule"), controller);
+    controller.addView(scheduleView);
+    controller.begin_here(model);
 };
 </script>
 </head>
 <body onload="run()">
 <p id="online">Offline</p>
-<canvas id="poolplay" name="poolplay" width="400" height="220" style="border:1px solid #000000;">
+<canvas id="schedule" name="schedule" width="400" height="220" style="border:1px solid #000000;">
 <p>Ooo, old Web browsers can't display these scores live.</p>
 </canvas>
 <p id="error_report"></p>
