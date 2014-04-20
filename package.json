@@ -14,6 +14,8 @@
     "yargs": "~1.2.1",
     "uglify-js": "~2.4.13",
     "gulp-uglify": "~0.2.1",
-    "debug": "~0.8.0"
+    "debug": "~0.8.0",
+    "gulp-rename": "~1.2.0",
+    "request": "~2.34.0"
   }
 }

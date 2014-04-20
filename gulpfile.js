@@ -6,7 +6,11 @@ var concat = require('gulp-concat');
 var s3 = require('gulp-s3');
 var gzip = require('gulp-gzip');
 var uglify = require('gulp-uglify');
+var rename = require('gulp-rename');
+var request = require('request');
 var fs = require('fs.extra');
+
+var couch_db = 'http://fun.renlabs.com:5984/bu';
 
 function flattenArray(a, r) {
     if (!r) { r = []; }
@@ -38,7 +42,8 @@ gulp.task('build-sched', function() {
     gulp.src(flattenArray([js, lib]))
         .pipe(gulp.dest(target));
     gulp.src(html)
-        .pipe(gulp.dest(target + '/dev.html'));
+        .pipe(rename('dev.html'))
+        .pipe(gulp.dest(target));
 });
 
 gulp.task('build-score', function() {
@@ -53,7 +58,8 @@ gulp.task('build-score', function() {
     gulp.src(flattenArray([js, lib]))
         .pipe(gulp.dest(target));
     gulp.src(html)
-        .pipe(gulp.dest(target + '/dev.html'));
+        .pipe(rename('dev.html'))
+        .pipe(gulp.dest(target));
 });
 
 gulp.task('build-tester', function() {
@@ -67,21 +73,11 @@ gulp.task('build-tester', function() {
     gulp.src(flattenArray([js, lib]))
         .pipe(gulp.dest(target));
     gulp.src(html)
-        .pipe(gulp.dest(target + '/index.html'));
+        .pipe(rename('index.html'))
+        .pipe(gulp.dest(target));
 });
 
-gulp.task('build', [
-    'build-sched',
-    'build-score',
-    'build-tester']);
-
-gulp.task('publish', ['build',], function() {
-    var knox_options = JSON.parse(fs.readFileSync('aws-credentials.json'));
-    knox_options.bucket = 'bellinghamultimatescoring-staging';
-    knox_options.endpoint = 's3-us-west-2.amazonaws.com';
-    gulp.src('./dist/*')
-        .pipe(s3(knox_options, {}));
-});
+gulp.task('build', [ 'build-sched', 'build-score', 'build-tester']);
 
 gulp.task('clean', function() {
     fs.rmrf('dist', function () {});
@@ -91,4 +87,52 @@ gulp.task('default', ['check', 'build']);
 
 gulp.task('watch', ['default'], function() {
     gulp.watch(['./dist/*'], ['default']);
+});
+
+////////////////////////////////////////////////////////////////
+
+function couch_attach_doc(url, distdir, rev, doclist) {
+    var docfile = doclist.pop();
+    var attachment_url = url + '/' + docfile + "?rev=" + rev;
+    console.log(docfile, "to", attachment_url, "left:", doclist);
+    fs.createReadStream(distdir + '/' + docfile)
+        .pipe(request.put(attachment_url, function(e, r, b) {
+            console.log("info: e:", e, "r.s:", r.statusCode, "b:", b);
+            if (!e && r.statusCode == 201) {
+                if (doclist.length > 0) {
+                    var rev = JSON.parse(b).rev;
+                    couch_attach_doc(url, distdir, rev, doclist);
+                }
+            } else {
+                console.log("Trouble attaching ", docfile, e, r.statusCode, b);
+            }
+        }));
+}
+
+function couch_attach_docs(appname, doclist) {
+    var distdir = './dist/' + appname;
+    var srcdoc = './src/' + appname + '.json';
+    var url = couch_db + '/' + appname;
+    request.head(url, function (err, resp, body) {
+        if (!err && resp.statusCode == 404) {
+            fs.createReadStream(srcdoc)
+                .pipe(request.put(url), function(e, r, b) {
+                    if (!e && r.statusCode == 201) {
+                        couch_attach_docs(appname, doclist);
+                    } else {
+                        console.log("Trouble creating ", srcdoc, e, r.statusCode, b);
+                    }
+                });
+        } else if (!err && resp.statusCode == 200) {
+            var rev = JSON.parse(resp.headers.etag);  /* lose "" */
+            console.log("rev:", rev);
+            couch_attach_doc(url, distdir, rev, doclist);
+        } else {
+            console.log('code:', resp && resp.statusCode, 'err:', err, ' url:', url);
+        }
+    });
+}
+
+gulp.task('publish', ['build',], function() {
+    couch_attach_docs('score', ['dev.html','model.js','pouchdb-2.1.2.js','schedv.js','scorec.js','scorev.js']);
 });
