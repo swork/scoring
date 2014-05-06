@@ -30,3 +30,6 @@ staging
 
 # Credentials file (make it a symlink)
 aws-credentials.json
+
+# Other build products
+wp-support/bu-scoring.zip

@@ -1,0 +1,1 @@
+{    "_id": "_design/access",    "validate_doc_update": "function(newDoc, oldDoc, userCtx, secObj) {\n        throw({forbidden: \"The schedule is currently closed to score updates.\"});\n\n	/* eg only, ignore it */\n        if (newDoc.address === undefined) {\n            throw({forbidden: \"Document must have an address.\"});\n        }\n" }
