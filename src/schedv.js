@@ -224,7 +224,7 @@ function _ScheduleView_draw_date_line(today) {
         ctx.stroke();
 
         ctx.fillStyle = "black";
-        ctx.globalAlpha = 0.2;
+        ctx.globalAlpha = 0.1;
         ctx.fillRect(left, 0, this.canvas.width - left, this.canvas.height);
         ctx.restore();
     }
